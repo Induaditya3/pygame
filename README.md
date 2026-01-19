@@ -47,5 +47,9 @@ Image assets (`coin.png`, `door.png`, `monster.png`, `robot.png`) are expected t
 - Main loop entry point: [project/src/main.py](project/src/main.py) runs `Teleporter()` when executed directly.
 - Helpful tweak points: adjust `step` in `move_robot()` for player speed, or change the `speed` calculation in `update()` to tune difficulty scaling.
 
+## Other stuffs
+
+I have also added code of minor excercises that I di while learning basics of pygame. All those directories are prefixed with *part13*.
+
 ## License
 This project is distributed under the terms of the Unlicense; see [LICENSE](LICENSE).
