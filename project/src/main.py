@@ -59,9 +59,12 @@ class Teleporter:
         files = ["coin", "door", "monster", "robot"]
         self.images = {file: pygame.image.load(file + ".png") for file in files}
 
-    # following series of methods that starts with new_<object> return random coordinates of the object
+    # following series of methods that starts with new_<object> return random coordinates of the object along with speed
+    # as per the rules defined in the update method
+    # also door speed is same self.speed so its only coordinates is computed 
     def new_coin_fall(self):
         return (
+            randrange(self.speed, self.speed + 3),
             randrange(
                 0, self.window_width - self.images["coin"].get_width(), self.space
             ),
@@ -70,6 +73,7 @@ class Teleporter:
 
     def new_coin_rise(self):
         return (
+            randrange(self.speed, self.speed + 3),
             randrange(
                 0, self.window_width - self.images["coin"].get_width(), self.space
             ),
@@ -78,6 +82,7 @@ class Teleporter:
 
     def new_monster_left(self):
         return (
+            randrange(self.speed, self.speed + 4),
             randrange(self.window_width, self.window_width + 500, self.space),
             randrange(
                 0,
@@ -88,6 +93,7 @@ class Teleporter:
 
     def new_monster_right(self):
         return (
+            randrange(self.speed, self.speed + 4),
             randrange(-500, -self.images["monster"].get_width(), self.space),
             randrange(
                 0,
@@ -168,7 +174,7 @@ class Teleporter:
         monsters_coord = self.monsters_left if self.fall else self.monsters_right
         for coord in monsters_coord:
             if self.overlaps(
-                self.images["robot"], robot_coord, self.images["monster"], coord
+                self.images["robot"], robot_coord, self.images["monster"], (coord[1], coord[2])
             ):
                 self.lives -= 1
                 if self.lives < 0:
@@ -188,7 +194,7 @@ class Teleporter:
         coins_coord = self.coins_fall if self.fall else self.coins_rise
         for coord in coins_coord:
             if self.overlaps(
-                self.images["robot"], robot_coord, self.images["coin"], coord
+                self.images["robot"], robot_coord, self.images["coin"], (coord[1], coord[2])
             ):
                 self.points += 1
                 # remove collected coin and spawn new one
@@ -215,7 +221,8 @@ class Teleporter:
     def new_game(self):
         # minimum spacing between objects
         self.space = self.images["monster"].get_width()
-
+        # base speed
+        self.speed = 1
         self.game_over = False
         # determines whether coin fall or rises / arrow key behavior is reversed or not
         self.fall = True
@@ -235,12 +242,12 @@ class Teleporter:
         self.robot_y = self.window_height - self.images["robot"].get_height()
 
         # when self.fall is true, falling list of coins will be updated
-        # this list stores the coordinate only
+        # this list stores the speed and coordinates
         # x varies from left to right most of visible range of window
         # y varies from -500 to height of coin, so that initially coins are above the visible range of window
         self.coins_fall = [self.new_coin_fall() for _ in range(10)]
         # when self.fall is false, rising list of coins will be updated
-        # similary this will only store coordinates
+        # similary this will  store speed and coordinates
         # x varies form left to right most visible range of window
         # y varies from self.window_height to below the visible range of window
         self.coins_rise = [self.new_coin_rise() for _ in range(10)]
@@ -260,26 +267,26 @@ class Teleporter:
         if not self.game_over:
             self.move_robot()
             # base speed
-            # monster's speed = base speed
-            # coin's speed = base speed + 2
+            # monster's speed = base speed to  base speed + 4
+            # coin's speed = base speed to  base speed + 3
             # door's speed = base speed + 5
-            speed = 1 if self.points // 10 == 0 else self.points // 10
+            self.speed = 1 if self.points // 10 == 0 else self.points // 10
             # this will update coordinates of all objects except the robot
             if self.fall:
                 self.coins_fall = [
                     self.new_coin_fall()
                     if y - self.images["coin"].get_height() > self.window_height
-                    else (x, y + speed + 2)
-                    for x, y in self.coins_fall
+                    else (speed, x, y + speed + 2)
+                    for speed, x, y in self.coins_fall
                 ]
                 self.monsters_left = [
                     self.new_monster_left()
                     if x + self.images["monster"].get_width() < 0
-                    else (x - speed, y)
-                    for x, y in self.monsters_left
+                    else (speed, x - speed, y)
+                    for  speed, x, y in self.monsters_left
                 ]
                 self.door_left_x, self.door_left_y = (
-                    (self.door_left_x - speed - 5, self.door_left_y)
+                    (self.door_left_x - self.speed - 5, self.door_left_y)
                     if self.door_left_x + self.images["door"].get_width() > 0
                     else self.new_door_left()
                 )
@@ -287,19 +294,19 @@ class Teleporter:
                 self.coins_rise = [
                     self.new_coin_rise()
                     if y + self.images["coin"].get_height() < 0
-                    else (x, y - speed - 2)
-                    for x, y in self.coins_rise
+                    else (speed, x, y - speed - 2)
+                    for  speed, x, y in self.coins_rise
                 ]
                 self.monsters_right = [
                     self.new_monster_right()
                     if x > self.window_width
-                    else (x + speed, y)
-                    for x, y in self.monsters_right
+                    else (speed, x + speed, y)
+                    for speed, x, y in self.monsters_right
                 ]
                 self.door_right_x, self.door_right_y = (
                     self.new_door_right()
                     if self.door_right_x > self.window_width
-                    else (self.door_right_x + speed + 5, self.door_right_y)
+                    else (self.door_right_x + self.speed + 5, self.door_right_y)
                 )
 
     def main_loop(self):
@@ -351,10 +358,10 @@ class Teleporter:
             door_coord = self.door_right_x, self.door_right_y
 
         # draw all the objects
-        for coord in monster_coord:
+        for _, *coord in monster_coord:
             self.window.blit(self.images["monster"], coord)
 
-        for coord in coin_coord:
+        for _, *coord in coin_coord:
             self.window.blit(self.images["coin"], coord)
 
         self.window.blit(self.images["door"], door_coord)
