@@ -46,12 +46,13 @@ class Teleporter:
         pygame.display.set_caption("Teleporter")
         self.clock = pygame.time.Clock()
 
-        self.left_pressed, self.right_pressed, self.up_pressed, self.down_pressed = (
-            False,
-            False,
-            False,
-            False,
-        )
+        (
+            self.left_pressed,
+            self.right_pressed,
+            self.up_pressed,
+            self.down_pressed,
+            self.pressed_space,
+        ) = (False, False, False, False, False)
         self.new_game()
         self.main_loop()
 
@@ -61,7 +62,7 @@ class Teleporter:
 
     # following series of methods that starts with new_<object> return random coordinates of the object along with speed
     # as per the rules defined in the update method
-    # also door speed is same self.speed so its only coordinates is computed 
+    # also door speed is same self.speed so its only coordinates is computed
     def new_coin_fall(self):
         return (
             randrange(self.speed, self.speed + 3),
@@ -142,7 +143,7 @@ class Teleporter:
 
     def move_robot(self):
         # amount by which to increment robot's position
-        step = 5
+        step = 10 if self.pressed_space else 5
         # update robot coordinates based on key press and self.fall
         # left movement
         if (
@@ -174,7 +175,10 @@ class Teleporter:
         monsters_coord = self.monsters_left if self.fall else self.monsters_right
         for coord in monsters_coord:
             if self.overlaps(
-                self.images["robot"], robot_coord, self.images["monster"], (coord[1], coord[2])
+                self.images["robot"],
+                robot_coord,
+                self.images["monster"],
+                (coord[1], coord[2]),
             ):
                 self.lives -= 1
                 if self.lives < 0:
@@ -194,7 +198,10 @@ class Teleporter:
         coins_coord = self.coins_fall if self.fall else self.coins_rise
         for coord in coins_coord:
             if self.overlaps(
-                self.images["robot"], robot_coord, self.images["coin"], (coord[1], coord[2])
+                self.images["robot"],
+                robot_coord,
+                self.images["coin"],
+                (coord[1], coord[2]),
             ):
                 self.points += 1
                 # remove collected coin and spawn new one
@@ -283,7 +290,7 @@ class Teleporter:
                     self.new_monster_left()
                     if x + self.images["monster"].get_width() < 0
                     else (speed, x - speed, y)
-                    for  speed, x, y in self.monsters_left
+                    for speed, x, y in self.monsters_left
                 ]
                 self.door_left_x, self.door_left_y = (
                     (self.door_left_x - self.speed - 5, self.door_left_y)
@@ -295,7 +302,7 @@ class Teleporter:
                     self.new_coin_rise()
                     if y + self.images["coin"].get_height() < 0
                     else (speed, x, y - speed - 2)
-                    for  speed, x, y in self.coins_rise
+                    for speed, x, y in self.coins_rise
                 ]
                 self.monsters_right = [
                     self.new_monster_right()
@@ -327,6 +334,9 @@ class Teleporter:
                     self.up_pressed = True
                 if event.key == pygame.K_DOWN:
                     self.down_pressed = True
+                # space key when kept pressed boosts the speed of the robot
+                if event.key == pygame.K_SPACE:
+                    self.pressed_space = True
                 if event.key == pygame.K_F2:
                     self.new_game()
                 if event.key == pygame.K_ESCAPE:
@@ -340,6 +350,8 @@ class Teleporter:
                     self.up_pressed = False
                 if event.key == pygame.K_DOWN:
                     self.down_pressed = False
+                if event.key == pygame.K_SPACE:
+                    self.pressed_space = False
             if event.type == pygame.QUIT:
                 exit()
 
