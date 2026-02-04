@@ -3,7 +3,7 @@
 Small arcade dodger built with pygame where you collect coins, dodge monsters, and pass through a teleporter that inverts the controls and flips the world. The project was created as a final assignment for the University of Helsinki Python programming MOOC.
 
 ## What you do
-- Move the robot with the arrow keys to grab coins and rack up points.
+- Move the robot with the arrow keys to grab coins and stack up points.
 - Avoid monsters; each hit costs one of your three lives.
 - Touching the teleporter reverses controls and flips coin and monster flow (inverted mode).
 - Press `F2` to restart and `Esc` to quit.
